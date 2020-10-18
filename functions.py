@@ -6,11 +6,14 @@ def scrub_data(df):
     df.Z_LOC.fillna(-df.DEPTH_MD, inplace=True)
     
     # Create dictionaries with median X_LOC and Y_LOC for each well
+    # Get list of unique wells
     unique_wells = df.WELL.unique()
     
+    # Set up dictionaries for median X_LOC and Y_LOC for each well
     X_LOC_medians = {}
     Y_LOC_medians = {}
 
+    # Assign each well as the key and median X_LOC/Y_LOC as value
     for well in unique_wells:
         X_LOC_medians[well] = df.loc[df['WELL']==well]['X_LOC'].median()
         Y_LOC_medians[well] = df.loc[df['WELL']==well]['Y_LOC'].median()
@@ -22,33 +25,15 @@ def scrub_data(df):
         
     for k, v in Y_LOC_medians.items():
         df.loc[df.WELL == k, 'Y_LOC'] = v
-        
-        
+            
     # Fill missing GROUP and FORMATION values with unknown
     df.loc[df.GROUP.isna(), 'GROUP'] = 'Unknown'
     df.loc[df.FORMATION.isna(), 'FORMATION'] = 'Unknown'
     
-    # Fill Caliper values using forward fill
-    df.CALI.fillna(method='ffill', inplace=True)
-    
-    # Fill missing medium resistivity data using forward fill
-    df.RMED.fillna(method='ffill', inplace=True)
-    
-    # Fill missing deep resistivity data using forward fill
-    df.RDEP.fillna(method='ffill', inplace=True)
-    
-    # Fill missing bulk density data using forward fill
-    df.RHOB.fillna(method='ffill', inplace=True)
-
-    # Fill missing compressional slowness data using forward fill
-    df.DTC.fillna(method='ffill', inplace=True)
-
-    # Fill missing density correction log data with 0
-    df.DRHO.fillna(0, inplace=True)
+    # Fill multiple columns using forward fill
+    cols = ['CALI', 'RMED', 'RDEP', 'RHOB', 'DTC', 'DRHO']
+    df[cols].fillna(method='ffill', inplace=True)
    
-    # Fill missing confidence values with "1", the most common value
-    df.FORCE_2020_LITHOFACIES_CONFIDENCE.fillna(1, inplace=True)
-    
     # Create dummy variables for GROUP and FORMATION
     group_dummies = pd.get_dummies(df.GROUP, prefix='GRP')
     formation_dummies = pd.get_dummies(df.FORMATION, prefix='FM')
